@@ -468,15 +468,11 @@ function [x, cost, info, options] = rlbfgsCustom(problem, x0, options)
     cost = xCurCost;
     
     
-    dimension = 3;
-    nMatrixRepr = 3;
+    dimension = problem.M.dim();
     options.invHessianApproximation = zeros(dimension);
     canonicalBasis = eye(dimension);
-    I = eye(nMatrixRepr);
-    ToIdVec = @(V) ToTangentVectorComponentsSO3(V,I,'left');
-    ToIdMat = @(V) ToMatrixSO3TangentVector(I,V,'left');
     for i = 1:dimension 
-        options.invHessianApproximation(:,i) = -ToIdVec(getDirection(M, xCur, ToIdMat(canonicalBasis(:,i)), sHistory,...
+        options.invHessianApproximation(:,i) = -problem.M.tovec(getDirection(M, xCur, problem.M.tomat(canonicalBasis(:,i)), sHistory,...
                 yHistory, rhoHistory, scaleFactor, min(k, options.memory))); %the minus sign is because this function returns -Pg, where P is an apprInvHessian and g is the third argument
     end
 
