@@ -284,8 +284,10 @@ function M = rotations3factory()
         end
     end
 
-    M.dlog =@dirderlog;
-    function dirder = dirderlog(x,y,V)
+    M.Ad =@(R) R;
+
+    M.dlog =@derlog;
+    function dirder = derlog(x,y)
         
         s = M.log(x,y);
 
@@ -302,7 +304,6 @@ function M = rotations3factory()
             eTheta = (bTheta-2*cTheta)/(2*aTheta);
         end
         
-        adjS = x'*y;
-        dirder = M.tomat((eye(M.dim()) -0.5*s + eTheta * s * s )*adjS*M.tovec(V));
+        dirder = (eye(M.dim()) -0.5*s + eTheta * s * s )*M.Ad(x'*y);
     end
 end
