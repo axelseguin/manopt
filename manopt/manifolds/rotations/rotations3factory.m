@@ -54,7 +54,8 @@ function M = rotations3factory()
 %   June 18, 2019 (NB)
 %       Using qr_unique for the QR-based retraction.
 
-    n = 3; 
+    n = 3;
+    k = 1;
     
     if ~exist('k', 'var') || isempty(k)
         k = 1;
@@ -67,7 +68,7 @@ function M = rotations3factory()
     else
         error('k must be an integer no less than 1.');
     end
-    
+   
     M.dim = @() k*nchoosek(n, 2);
     
     M.inner = @(x, d1, d2) d1(:).'*d2(:);
@@ -77,6 +78,8 @@ function M = rotations3factory()
     M.typicaldist = @() pi*sqrt(n*k);
     
     M.proj = @(X, H) multiskew(multiprod(multitransp(X), H));
+    
+    M.inv =@(x) x';
     
     M.tangent = @(X, H) multiskew(H);
     
@@ -285,9 +288,13 @@ function M = rotations3factory()
     end
 
     M.Ad =@(R) R;
+    
+    M.gramianmatrix = 2*eye(3);
+    
+    M.adjointmap =@(map) M.gramianmatrix*(map')/M.gramianmatrix;
 
     M.dlog =@derlog;
-    function dirder = derlog(x,y)
+    function der = derlog(x,y)
         
         s = M.log(x,y);
 
@@ -304,6 +311,6 @@ function M = rotations3factory()
             eTheta = (bTheta-2*cTheta)/(2*aTheta);
         end
         
-        dirder = (eye(M.dim()) -0.5*s + eTheta * s * s )*M.Ad(x'*y);
+        der = (eye(M.dim()) -0.5*s + eTheta * s * s )*M.Ad(x'*y);
     end
 end
