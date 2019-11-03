@@ -207,7 +207,8 @@ function M = liespecialeuclidean3factory()
         if nargin<1
             maxtranslation = 1;
         end
-        randpose = [randrot(n, k),maxtranslation*normalize(rand(3,1),'norm');zeros(1,3),1];
+        translation = rand(3,1);
+        randpose = [randrot(n, k),maxtranslation*translation/norm(translation);zeros(1,3),1];
     end
     
     M.randvec = @randomvec;
@@ -218,7 +219,9 @@ function M = liespecialeuclidean3factory()
         U = randskew(n, k);
         nrmU = sqrt(U(:).'*U(:));
         U = U / nrmU;
-        V = [U,maxtranslation*normalize(rand(3,1),'norm');zeros(1,4)];
+        translation = rand(3,1);
+        V = [U,maxtranslation*translation/norm(translation);zeros(1,4)];
+        V = V / M.norm(M.id,V);
     end
     
     M.lincomb = @matrixlincomb;
@@ -241,7 +244,7 @@ function M = liespecialeuclidean3factory()
     M.vecmatareisometries = @() true;
     
     %% custom field
-    M.injectivityradius = 1;
+    M.injectivityradius = pi;
     
     
     M.basisvec =@getbasisvectors;    
