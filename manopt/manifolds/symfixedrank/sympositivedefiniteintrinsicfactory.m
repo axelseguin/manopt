@@ -91,7 +91,7 @@ function M = sympositivedefiniteintrinsicfactory(n)
     
     % Same here: X\Y is not symmetric in general.
     % Same remark about taking the real part.
-    M.dist = @(X, Y) real(trAA(real(logm(X^(-1/2)*Y*X^(-1/2)))));
+    M.dist = @(X, Y) real(trAA(real(logm(X\Y))));
     
     M.typicaldist = @() sqrt(n*(n+1)/2);
     
@@ -199,5 +199,55 @@ function M = sympositivedefiniteintrinsicfactory(n)
     M.vec = @(X, U) U(:);
     M.mat = @(X, u) reshape(u, n, n);
     M.vecmatareisometries = @() false;
+    
+    function e = getbasisvectors(i)
+        if i>M.dim()
+            error('Cannot access %d-th basis vector because there are only %d of them!', i, M.dim());
+        end
+        found = false;
+        toremove = n;
+        diagIndex = 0;
+        while ~found
+            if i-toremove<=0
+                found = true;
+            else
+                diagIndex = diagIndex + 1;
+                i = i-toremove;
+                toremove = toremove - 1;
+            end
+        end
+        e = zeros(n-diagIndex,1);
+        e(i) = 1;
+        e = diag(e,diagIndex);
+        e = 0.5*(e+e');
+    end
+%     M.storedBasisVectors =@getAllBasisVectors;
+%     function tostore = getAllBasisVectors()
+%         tostore = cell(M.dim(),1);
+%         for i = 1:M.dim()
+%             tostore{i} = getbasisvectors(i);
+%         end
+%     end
+
+    M.basisvec =@(i) getbasisvectors(i);
+    
+    
+
+
+    M.tovec =@tovectorcomponents;
+    function veccomps = tovectorcomponents(vecmat)
+        veccomps = zeros(M.dim(),1);
+        for i = 1:M.dim()
+            veccomps(i) = M.inner(eye(n),M.basisvec(i),vecmat)/ M.inner(eye(n),M.basisvec(i),M.basisvec(i));
+        end
+    end
+
+    M.tomat =@tomatrixrepresentation;
+    function matrep = tomatrixrepresentation(vecrep)
+        matrep = M.zerovec();
+        for i = 1:M.dim()
+            matrep = matrep + vecrep(i)*M.basisvec(i);
+        end
+    end
     
 end
