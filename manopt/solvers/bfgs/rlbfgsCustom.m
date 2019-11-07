@@ -467,15 +467,17 @@ function [x, cost, info, options] = rlbfgsCustom(problem, x0, options)
     x = xCur;
     cost = xCurCost;
     
-    
-    dimension = problem.M.dim();
-    options.invHessianApproximation = zeros(dimension);
-    canonicalBasis = eye(dimension);
-    for i = 1:dimension 
-        options.invHessianApproximation(:,i) = -problem.M.tovec(getDirection(M, xCur, problem.M.tomat(canonicalBasis(:,i)), sHistory,...
-                yHistory, rhoHistory, scaleFactor, min(k, options.memory))); %the minus sign is because this function returns -Pg, where P is an apprInvHessian and g is the third argument
-    end
-
+    %% return also the Hessian approximation! 
+%     dimension = problem.M.dim();
+%     options.invHessianApproximation = zeros(dimension);
+%     canonicalBasis = eye(dimension);
+%     for i = 1:dimension 
+%         options.invHessianApproximation(:,i) = -problem.M.tovec(getDirection(M, xCur, problem.M.tomat(canonicalBasis(:,i)), sHistory,...
+%                 yHistory, rhoHistory, scaleFactor, min(k, options.memory))); %the minus sign is because this function returns -Pg, where P is an apprInvHessian and g is the third argument
+%     end
+    options.invHessianApproximation = @(V) -getDirection(M, xCur, V, sHistory,...
+                yHistory, rhoHistory, scaleFactor, min(k, options.memory));
+    %%
     if options.verbosity >= 1
         fprintf('Total time is %f [s] (excludes statsfun)\n', ...
                 info(end).time);

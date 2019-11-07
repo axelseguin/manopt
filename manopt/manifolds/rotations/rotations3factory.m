@@ -1,4 +1,4 @@
-function M = rotations3factory()
+function M = rotations3factory(n)
 % Returns a manifold structure to optimize over rotation matrices.
 % 
 % function M = rotationsfactory(n)
@@ -54,7 +54,6 @@ function M = rotations3factory()
 %   June 18, 2019 (NB)
 %       Using qr_unique for the QR-based retraction.
 
-    n = 3;
     k = 1;
     
     if ~exist('k', 'var') || isempty(k)
@@ -251,25 +250,31 @@ function M = rotations3factory()
     %% custom field
     M.injectivityradius = sqrt(2)*pi;
     
-    M.id = eye(3);
+    M.id = eye(n);
     
-    M.basisvec =@getbasisvectors;    
+    M.basisvec =@getbasisvectors;  
     function e = getbasisvectors(i)
-        e = zeros(3,3);
-        switch i
-            case 1
-                e(2,3) = -1;
-                e(3,2) =  1;
-            case 2
-                e(1,3) =  1;
-                e(3,1) = -1;
-            case 3
-                e(1,2) = -1;
-                e(2,1) =  1;
-            otherwise
-                error('Cannot access basis vector %d because there only %d of them!',i, M.dim);
+        if i>M.dim()
+            error('Cannot access %d-th basis vector because there are only %d of them!', i, M.dim());
         end
+        found = false;
+        toremove = n-1;
+        diagIndex = 1;
+        while ~found
+            if i-toremove<=0
+                found = true;
+            else
+                diagIndex = diagIndex + 1;
+                i = i-toremove;
+                toremove = toremove - 1;
+            end
+        end
+        e = zeros(n-diagIndex,1);
+        e(i) = 1;
+        e = diag(e,diagIndex);
+        e = e-e';
     end
+    
 
     M.tovec =@tovectorcomponents;
     function veccomps = tovectorcomponents(vecmat)
@@ -289,28 +294,32 @@ function M = rotations3factory()
 
     M.Ad =@(R) R;
     
-    M.gramianmatrix = 2*eye(3);
+    M.gramianmatrix = 2*eye(n);
     
     M.adjointmap =@(map) M.gramianmatrix*(map')/M.gramianmatrix;
 
-    M.dlog =@derlog;
-    function der = derlog(x,y)
-        
-        s = M.log(x,y);
-
-        theta2 = trace(s'*s)/2;
-        theta = sqrt(theta2);
-        if theta2>1e-4
-            aTheta = sin(theta) / theta;
-            bTheta = (1-cos(theta)) / theta2;
-            eTheta = (bTheta-0.5*aTheta)/(1-cos(theta));
-        else
-            aTheta = 1 - theta.*theta/factorial(3) + theta.^4/(factorial(5));
-            bTheta = 0.5 - theta.*theta/24 + theta.^4/(factorial(6));
-            cTheta = 1/(factorial(3)) - theta.*theta/(factorial(5)) + theta.^4/(factorial(7));
-            eTheta = (bTheta-2*cTheta)/(2*aTheta);
-        end
-        
-        der = (eye(M.dim()) -0.5*s + eTheta * s * s )*M.Ad(x'*y);
-    end
+    M.dlog =@(X,V) dlogm(X, V);
+    M.dexp =@(V,U) dexpm(V, U);
+    
+    
+    
+%     M.dlog2 =@derlog;
+%     function der = derlog(x,y)
+%         s = M.log(x,y);
+%         
+%         theta2 = trace(s'*s)/2;
+%         theta = sqrt(theta2);
+%         if theta2>1e-4
+%             aTheta = sin(theta) / theta;
+%             bTheta = (1-cos(theta)) / theta2;
+%             eTheta = (bTheta-0.5*aTheta)/(1-cos(theta));
+%         else
+%             aTheta = 1 - theta.*theta/factorial(3) + theta.^4/(factorial(5));
+%             bTheta = 0.5 - theta.*theta/24 + theta.^4/(factorial(6));
+%             cTheta = 1/(factorial(3)) - theta.*theta/(factorial(5)) + theta.^4/(factorial(7));
+%             eTheta = (bTheta-2*cTheta)/(2*aTheta);
+%         end
+%         
+%         der = (eye(M.dim()) -0.5*s + eTheta * s * s )*M.Ad(x'*y);
+%     end
 end

@@ -1,4 +1,4 @@
-function M = liespecialeuclidean3factory()
+function M = liespecialeuclideanfactory()
 % Returns a manifold structure to optimize over the special Euclidean group
 % 
 % function M = specialeuclideanfactory(n)
@@ -93,10 +93,11 @@ function M = liespecialeuclidean3factory()
         Y = zeros(M.nmatrep,M.nmatrep);
         if nargin < 3
             Y(1:3,1:3) = qr_unique(X(1:3,1:3) + X(1:3,1:3)*U(1:3,1:3));
+            Y(:,4) = X(:,4)+U(:,4);
         else
             Y(1:3,1:3) = qr_unique(X(1:3,1:3) + t*X(1:3,1:3)*U(1:3,1:3));
+            Y(:,4) = X(:,4)+t*U(:,4);
         end
-        Y(:,4) = X(:,4)+U(:,4);
     end
 
 %     M.invretr_qr = @inverse_retraction_qr;
@@ -244,7 +245,7 @@ function M = liespecialeuclidean3factory()
     M.vecmatareisometries = @() true;
     
     %% custom field
-    M.injectivityradius = pi;
+    M.injectivityradius = 1;
     
     
     M.basisvec =@getbasisvectors;    

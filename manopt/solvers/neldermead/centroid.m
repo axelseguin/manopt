@@ -42,7 +42,7 @@ function y = centroid(M, x)
     
     query = warning('query', 'manopt:getHessian:approx');
     warning('off', 'manopt:getHessian:approx');
-    options.verbosity = 0;
+    options.verbosity = 2;
     options.maxiter = 15;
     y = trustregions(problem, x{randi(n)}, options);
     warning(query.state, 'manopt:getHessian:approx');
