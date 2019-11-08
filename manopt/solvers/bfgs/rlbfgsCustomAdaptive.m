@@ -1,4 +1,4 @@
-function [x, cost, info, options] = rlbfgsCustom(problem, x0, options)
+function [x, cost, info, options] = rlbfgsCustomAdaptive(problem, x0, options)
 % Riemannian limited memory BFGS solver for smooth objective functions.
 % 
 % function [x, cost, info, options] = rlbfgs(problem)
@@ -326,8 +326,12 @@ function [x, cost, info, options] = rlbfgsCustom(problem, x0, options)
         end  
         
         if stop
-            if options.verbosity >= 1
+            if options.verbosity >= 1 
                 fprintf([reason '\n']);
+            end
+            if (iter<=1) %it means we have found optimum in at most 1 step
+                options.acceptedContinuationStep = true;
+                options.contraptionRate = 0.25*options.maxContraption;
             end
             break;
         end
@@ -348,6 +352,21 @@ function [x, cost, info, options] = rlbfgsCustom(problem, x0, options)
         % selected. Toward convergence, we hope to see alpha = 1.
         alpha = stepsize/M.norm(xCur, p);
         step = M.lincomb(xCur, alpha, p);
+        
+        if iter==0
+            stepSize0 = stepsize;
+        end
+        if iter==1
+            options.contraptionRate = stepsize / stepSize0;
+            fprintf('First contraption rate : %f.\n',options.contraptionRate);
+            if options.contraptionRate>options.maxContraption
+                fprintf('Too high contraption rate. Restarting with smaller step size.\n');
+                options.acceptedContinuationStep = false;
+                break;
+            else 
+                options.acceptedContinuationStep = true;
+            end
+        end
         
         
         % Query cost and gradient at the candidate new point.

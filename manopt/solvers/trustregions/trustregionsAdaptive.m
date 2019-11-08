@@ -1,4 +1,4 @@
-function [x, cost, info, options] = trustregions(problem, x, options)
+function [x, cost, info, options] = trustregionsAdaptive(problem, x, options)
 % Riemannian trust-regions solver for optimization on manifolds.
 %
 % function [x, cost, info, options] = trustregions(problem)
@@ -451,7 +451,20 @@ while true
         if options.verbosity >= 1
             fprintf([reason '\n']);
         end
+        if ~isfield(options,'acceptedContinuationStep')
+            options.acceptedContinuationStep = true;
+            options.contraptionRate = 0.5*options.maxContraption;
+        end
         break;
+    end
+    if k==2
+        if options.contraptionRate>options.maxContraption
+            fprintf('Too high contraption rate. Restarting with smaller step size.\n');
+            options.acceptedContinuationStep = false;
+            break;
+        else
+            options.acceptedContinuationStep = true;
+        end
     end
 
     if options.verbosity > 2 || options.debug > 0
@@ -696,6 +709,15 @@ while true
         accstr = 'acc';
         % We accept the step: no need to keep the old cache.
         storedb.removefirstifdifferent(key, key_prop);
+        
+        if k==0
+            stepSize0 = norm_eta;
+        end
+        if k==1
+            options.contraptionRate = norm_eta / stepSize0;
+            fprintf('First contraption rate : %f.\n',options.contraptionRate);
+        end
+        
         x = x_prop;
         key = key_prop;
         fx = fx_prop;
