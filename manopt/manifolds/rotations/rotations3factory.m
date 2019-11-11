@@ -298,8 +298,12 @@ function M = rotations3factory(n)
     
     M.adjointmap =@(map) M.gramianmatrix*(map')/M.gramianmatrix;
 
-    M.dlog =@(X,V) dlogm(X, V);
-    M.dexp =@(V,U) dexpm(V, U);
+    M.dlog =@(X,Y,V) dlogm(M.inv(X)*Y,M.inv(X)*Y*V);
+    M.dexp =@dexpfunction;
+    function Dexp = dexpfunction(X,U)
+        V = M.log(M.id,X);
+        Dexp = M.proj(X,dexpm(V, U));
+    end
     
     
     

@@ -196,9 +196,11 @@ function M = sympositivedefinitefactory(n)
     M.mat = @(X, u) reshape(u, n, n);
     M.vecmatareisometries = @() false;
     
-%     M.dlog = @(X,U) M.egrad2rgrad(X,dlogm(X,U));
-%     M.dexp = @(X,U) M.egrad2rgrad(X,dexpm(X,U));
-
-    M.dlog = @(X,U) dlogm(X,U);
-    M.dexp = @(X,U) dexpm(X,U);
+    
+    M.dlog =@(X,Y,V) X*dlogm(X\Y,X\V);
+    M.dexp =@dexpfunction;
+    function Dexp = dexpfunction(X,U)
+        V = M.log(eye(n),X);
+        Dexp = M.proj(X,dexpm(V, U));
+    end
 end
